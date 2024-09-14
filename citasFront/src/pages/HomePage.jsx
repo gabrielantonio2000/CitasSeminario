@@ -19,14 +19,14 @@ function HomePage() {
   const [servicios] = useState([
     {
       id: 1,
-      nombre: "prueba",
+      nombre: "Prueba.Fade",
     },
   ]);
   // proveedores
   const [proveedores] = useState([
     {
       id: 1,
-      nombre: "prueba",
+      nombre: "Gabriel",
     },
   ]);
 
