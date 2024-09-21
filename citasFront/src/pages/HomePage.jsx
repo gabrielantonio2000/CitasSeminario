@@ -20,7 +20,12 @@ function HomePage() {
     {
       id: 1,
       nombre: "Prueba.Fade",
+      
     },
+    {
+      id: 2,
+      nombre:"Taper Fade"
+    }
   ]);
   // proveedores
   const [proveedores] = useState([
@@ -50,18 +55,22 @@ function HomePage() {
                 selectedKey={selectedTab}
                 onSelectionChange={setSelectedTab}
               >
+                
                 <Tab key="step1" title="Paso uno">
                   <div className="flex flex-col gap-4">
                     <h4
                       style={{ padding: "20px 0 0 0" }}
                       className="font-bold text-large text-center"
                     >
+
+
+
                       Seleccione servicio y proveedor
                     </h4>
                     <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
                       <Select
                         labelPlacement={"inside"}
-                        label="servicio"
+                        label="corte"
                         className="max-w-xs"
                         isRequired
                         disallowEmptySelection
@@ -75,7 +84,7 @@ function HomePage() {
 
                       <Select
                         labelPlacement={"inside"}
-                        label="proveedor"
+                        label="barbero"
                         className="max-w-xs"
                         isRequired
                         disallowEmptySelection
