@@ -65,7 +65,7 @@ function HomePage() {
 
 
 
-                      Seleccione servicio y proveedor
+                      Seleccionar Corte y Barbero
                     </h4>
                     <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
                       <Select
