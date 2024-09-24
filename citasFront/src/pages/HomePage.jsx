@@ -19,13 +19,20 @@ function HomePage() {
   const [servicios] = useState([
     {
       id: 1,
-      nombre: "Prueba.Fade",
-      
+      nombre: "Fade",
     },
     {
       id: 2,
-      nombre:"Taper Fade"
-    }
+      nombre: "Taper Fade",
+    },
+    {
+      id: 3,
+      nombre: "Degradado de barba",
+    },
+    {
+      id: 4,
+      nombre: "Tallado",
+    },
   ]);
   // proveedores
   const [proveedores] = useState([
