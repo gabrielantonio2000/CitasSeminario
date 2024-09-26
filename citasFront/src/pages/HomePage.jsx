@@ -661,10 +661,108 @@ function HomePage() {
                      </div>
                    </div>
                  </Tab>
+                 <Tab
+                   key="step3"
+                   title="Paso tres"
+                   isDisabled={isDisabledStep3}
+                 >
+                   <form className="flex flex-col gap-4">
+                     <h4
+                       style={{ padding: "20px 0 0 0" }}
+                       className="font-bold text-large text-center"
+                     >
+                       Ingrese su información
+                     </h4>
+                     <div
+                       style={{ padding: "0.75rem 0 0 0" }}
+                       className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row"
+                     >
+                       <Input
+                         isRequired
+                         label="Nombre"
+                         placeholder="Ingresa tu nombre"
+                         type="text"
+                         className="min-w-60"
+                         value={nombre}
+                         errorMessage={nombreMensajeError}
+                         isInvalid={esNombreInvalido}
+                         onValueChange={changeNombre}
+                       />
+                       <Input
+                         isRequired
+                         label="Apellido"
+                         placeholder="Ingresa tu apellido"
+                         type="text"
+                         className="min-w-60"
+                         value={apellido}
+                         errorMessage={apellidoMensajeError}
+                         isInvalid={esApellidoInvalido}
+                         onValueChange={changeApellido}
+                       />
+                     </div>
+                     <div className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row">
+                       <Input
+                         isRequired
+                         label="Correo"
+                         placeholder="Ingresa tu correo electronico"
+                         type="email"
+                         className="min-w-60"
+                         value={correo}
+                         errorMessage={correoMensajeError}
+                         isInvalid={esCorreoinvalido}
+                         onValueChange={changeCorreo}
+                         SelectedIdServicio
+                       />
+                       <Input
+                         isRequired
+                         label="Telefono"
+                         placeholder="Ingresa tu telefono"
+                         type="text"
+                         className="min-w-60"
+                         value={telefono}
+                         errorMessage={telefonoMensajeError}
+                         isInvalid={esTelefonoInvalido}
+                         onValueChange={changeTelefono}
+                       />
+                     </div>
+                     <Textarea
+                       label="Notas"
+                       placeholder="Ingresa una nota"
+                       value={notas}
+                       errorMessage={notasMensajeError}
+                       isInvalid={esNotasInvalido}
+                       onValueChange={changeNotas}
+                     />
 
-                 <Tab key="step2" title="Paso dos"></Tab>
-                 <Tab key="step3" title="Paso tres"></Tab>
-                 <Tab key="step4" title="Paso cuatro"></Tab>
+                     <div className="flex gap-2 justify-between">
+                       <Button
+                         onClick={() => setSelectedTab("step2")}
+                         color="primary"
+                       >
+                         Regresar
+                       </Button>
+
+                       <Button
+                         isDisabled={
+                           esNombreInvalido ||
+                           !nombre ||
+                           esApellidoInvalido ||
+                           !apellido ||
+                           esCorreoinvalido ||
+                           !correo ||
+                           esTelefonoInvalido ||
+                           !telefono
+                         }
+                         onClick={() => {
+                           setSelectedTab("step4");
+                         }}
+                         color="primary"
+                       >
+                         Continuar
+                       </Button>
+                     </div>
+                   </form>
+                 </Tab>
                </Tabs>
              </form>
            </CardBody>
