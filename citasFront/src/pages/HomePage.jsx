@@ -40,7 +40,6 @@ import imagenBarberia from "../assets/barberia.jpg";
 
 import { today, getLocalTimeZone } from "@internationalized/date";
 
-
 const diasDeLaSemana = {
   0: "domingo",
   1: "lunes",
@@ -50,11 +49,6 @@ const diasDeLaSemana = {
   5: "viernes",
   6: "sabado",
 };
-
-
-
-
-
 
 const nombreEmpresa = "PRUEBA S.A.";
 function HomePage() {
@@ -452,324 +446,469 @@ function HomePage() {
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   }
 
+  return (
+    <>
+      <div className="absolute w-full h-full">
+        <img
+          className="w-full h-full object-cover"
+          src={imagenBarberia}
+          alt=""
+        />
+      </div>
+      <div className="flex w-full py-36">
+        <ToastContainer />
+        <Card className=" mx-auto p-10 lg:w-[700px] md:w-[700px] ">
+          <CardBody className="">
+            <form onSubmit={submitDatosCita}>
+              <Tabs
+                fullWidth
+                size="md"
+                aria-label="Tabs form"
+                selectedKey={selectedTab}
+                onSelectionChange={setSelectedTab}
+              >
+                <Tab key="step1" title="Paso uno">
+                  <div className="flex flex-col gap-4">
+                    <h4
+                      style={{ padding: "20px 0 0 0" }}
+                      className="font-bold text-large text-center"
+                    >
+                      Seleccione servicio y proveedor
+                    </h4>
+                    <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
+                      {isLoadingServicios ? (
+                        <div
+                          color="primary"
+                          className="text-center w-[260px] px-1 py-2"
+                        >
+                          <Spinner
+                            label="Cargando..."
+                            color="primary"
+                            labelColor="primary"
+                          />
+                        </div>
+                      ) : (
+                        <Select
+                          onChange={onChangeServicio}
+                          labelPlacement={"inside"}
+                          label="servicio"
+                          className="max-w-xs"
+                          isRequired
+                          disallowEmptySelection
+                          defaultSelectedKeys={SelectedIdServicio}
+                        >
+                          {servicios.map((servicio) => (
+                            <SelectItem
+                              key={servicio.id}
+                              description={
+                                servicio.id != 0 &&
+                                `Precio Q ${servicio.precio} - Duración aprox. ${servicio.duracion} min.`
+                              }
+                            >
+                              {servicio.nombre}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      )}
+                      {isLoadingProveedores ? (
+                        <div
+                          color="primary"
+                          className="text-center w-[260px] px-1 py-2"
+                        >
+                          <Spinner
+                            label="Cargando..."
+                            color="primary"
+                            labelColor="primary"
+                          />
+                        </div>
+                      ) : (
+                        <Select
+                          labelPlacement={"inside"}
+                          label="proveedor"
+                          className="max-w-xs"
+                          isDisabled={isDisabledSelectProveedores}
+                          isRequired
+                          disallowEmptySelection
+                          onChange={onChangeProveedores}
+                          defaultSelectedKeys={SelectedIdProveedor}
+                        >
+                          {proveedores.map((proveedor) => (
+                            <SelectItem
+                              key={proveedor.id}
+                              description={
+                                proveedor.id != 0 && `${proveedor.apellido}`
+                              }
+                            >
+                              {`${proveedor.nombre}`}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      )}
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        isDisabled={isDisabledStep2}
+                        color="primary"
+                        onClick={() => setSelectedTab("step2")}
+                      >
+                        {isLoadingButton ? "Cargando datos..." : "Continuar"}
+                      </Button>
+                    </div>
+                  </div>
+                </Tab>
+                <Tab key="step2" title="Paso dos" isDisabled={isDisabledStep2}>
+                  <div className="flex flex-col gap-4">
+                    <h4
+                      style={{ padding: "20px 0 0 0" }}
+                      className="font-bold text-large text-center"
+                    >
+                      Seleccione fecha y hora de cita
+                    </h4>
+                    <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
+                      {isLoadingFechas ? (
+                        <div
+                          color="primary"
+                          className="text-center w-[260px] px-1 py-2"
+                        >
+                          <Spinner
+                            label="Cargando..."
+                            color="primary"
+                            labelColor="primary"
+                          />
+                        </div>
+                      ) : (
+                        <I18nProvider locale="es-ES">
+                          <Calendar
+                            className="min-w-max"
+                            aria-label="Date (Max Date Value)"
+                            isDateUnavailable={fechasReservadas}
+                            errorMessage={
+                              esDiaInvalido
+                                ? `El dia ${
+                                    diasDeLaSemana[
+                                      new Date(fechaSeleccionada).getUTCDay()
+                                    ]
+                                  } no es dia laboral, porfavor seleccione otro dia`
+                                : undefined
+                            }
+                            isInvalid={esDiaInvalido}
+                            value={fechaSeleccionadaValida}
+                            onChange={changeFecha}
+                            minValue={today(getLocalTimeZone())}
+                          />
+                        </I18nProvider>
+                      )}
+                      {isLoadingHorarioDIsponible ? (
+                        <div
+                          color="primary"
+                          className="text-center w-[260px] px-1 py-2"
+                        >
+                          <Spinner
+                            label="Cargando..."
+                            color="primary"
+                            labelColor="primary"
+                          />
+                        </div>
+                      ) : horarioDisponible.length > 0 ? (
+                        <Select
+                          labelPlacement={"inside"}
+                          label="Horario"
+                          className="max-w-xs"
+                          isRequired
+                          onChange={changeHorarioSeleccionado}
+                          defaultSelectedKeys={horarioSeleccionado}
+                        >
+                          {horarioDisponible.map((horario, i) => (
+                            <SelectItem key={i}>{horario}</SelectItem>
+                          ))}
+                        </Select>
+                      ) : (
+                        <div
+                          color="primary"
+                          className="text-center w-[260px] border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100"
+                        >
+                          <span className=" text-red-400">
+                            Horario no disponible
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 justify-between">
+                      <Button
+                        onClick={() => setSelectedTab("step1")}
+                        color="primary"
+                      >
+                        Regresar
+                      </Button>
+                      <Button
+                        isDisabled={isDisabledStep3}
+                        onClick={() => setSelectedTab("step3")}
+                        color="primary"
+                      >
+                        Continuar
+                      </Button>
+                    </div>
+                  </div>
+                </Tab>
 
+                <Tab key="step3" title="Paso tres" isDisabled={isDisabledStep3}>
+                  <form className="flex flex-col gap-4">
+                    <h4
+                      style={{ padding: "20px 0 0 0" }}
+                      className="font-bold text-large text-center"
+                    >
+                      Ingrese su información
+                    </h4>
+                    <div
+                      style={{ padding: "0.75rem 0 0 0" }}
+                      className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row"
+                    >
+                      <Input
+                        isRequired
+                        label="Nombre"
+                        placeholder="Ingresa tu nombre"
+                        type="text"
+                        className="min-w-60"
+                        value={nombre}
+                        errorMessage={nombreMensajeError}
+                        isInvalid={esNombreInvalido}
+                        onValueChange={changeNombre}
+                      />
+                      <Input
+                        isRequired
+                        label="Apellido"
+                        placeholder="Ingresa tu apellido"
+                        type="text"
+                        className="min-w-60"
+                        value={apellido}
+                        errorMessage={apellidoMensajeError}
+                        isInvalid={esApellidoInvalido}
+                        onValueChange={changeApellido}
+                      />
+                    </div>
+                    <div className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row">
+                      <Input
+                        isRequired
+                        label="Correo"
+                        placeholder="Ingresa tu correo electronico"
+                        type="email"
+                        className="min-w-60"
+                        value={correo}
+                        errorMessage={correoMensajeError}
+                        isInvalid={esCorreoinvalido}
+                        onValueChange={changeCorreo}
+                        SelectedIdServicio
+                      />
+                      <Input
+                        isRequired
+                        label="Telefono"
+                        placeholder="Ingresa tu telefono"
+                        type="text"
+                        className="min-w-60"
+                        value={telefono}
+                        errorMessage={telefonoMensajeError}
+                        isInvalid={esTelefonoInvalido}
+                        onValueChange={changeTelefono}
+                      />
+                    </div>
+                    <Textarea
+                      label="Notas"
+                      placeholder="Ingresa una nota"
+                      value={notas}
+                      errorMessage={notasMensajeError}
+                      isInvalid={esNotasInvalido}
+                      onValueChange={changeNotas}
+                    />
 
+                    <div className="flex gap-2 justify-between">
+                      <Button
+                        onClick={() => setSelectedTab("step2")}
+                        color="primary"
+                      >
+                        Regresar
+                      </Button>
 
+                      <Button
+                        isDisabled={
+                          esNombreInvalido ||
+                          !nombre ||
+                          esApellidoInvalido ||
+                          !apellido ||
+                          esCorreoinvalido ||
+                          !correo ||
+                          esTelefonoInvalido ||
+                          !telefono
+                        }
+                        onClick={() => {
+                          setSelectedTab("step4");
+                        }}
+                        color="primary"
+                      >
+                        Continuar
+                      </Button>
+                    </div>
+                  </form>
+                </Tab>
+                <Tab
+                  key="step4"
+                  title="Paso cuatro"
+                  isDisabled={
+                    esNombreInvalido ||
+                    !nombre ||
+                    esApellidoInvalido ||
+                    !apellido ||
+                    esCorreoinvalido ||
+                    !correo ||
+                    esTelefonoInvalido ||
+                    !telefono ||
+                    isDisabledStep3
+                  }
+                >
+                  <h4
+                    style={{ padding: "20px 0 0 0" }}
+                    className="font-bold text-large text-center"
+                  >
+                    Confirmación de cita
+                  </h4>
+                  <div className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row py-10">
+                    <div>
+                      <span className="font-bold">Servicio: </span>
+                      {
+                        servicios.find(
+                          (servicio) => servicio.id == SelectedIdServicio[0]
+                        )?.nombre
+                      }
+                      <br />
+                      <span className="font-bold">Precio: </span>Q
+                      {
+                        servicios.find(
+                          (servicio) => servicio.id == SelectedIdServicio[0]
+                        )?.precio
+                      }
+                      <br />
+                      <span className="font-bold">Duracion aprox: </span>
+                      {
+                        servicios.find(
+                          (servicio) => servicio.id == SelectedIdServicio[0]
+                        )?.duracion
+                      }{" "}
+                      min.
+                      <br />
+                      <span className="font-bold">Proveedor: </span>
+                      {
+                        proveedores.find(
+                          (servicio) => servicio.id == SelectedIdProveedor[0]
+                        )?.nombre
+                      }{" "}
+                      {
+                        proveedores.find(
+                          (servicio) => servicio.id == SelectedIdProveedor[0]
+                        )?.apellido
+                      }
+                      <br />
+                      <span className="font-bold">Fecha cita: </span>
+                      {format(fechaSeleccionadaValida?.toString(), "full")} a
+                      las {horarioDisponible[horarioSeleccionado[0]]} hrs.
+                    </div>
+                    <div>
+                      <span className="font-bold">Nombre: </span>
+                      {nombre}
+                      <br />
+                      <span className="font-bold">Apellido: </span>
+                      {apellido}
+                      <br />
+                      <span className="font-bold">correo: </span>
+                      {correo}
+                      <br />
+                      <span className="font-bold">Telefono: </span>
+                      {telefono}
+                      <br />
+                      <span className="font-bold">Notas: </span>
+                      {notas}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-between">
+                    <Button
+                      onClick={() => setSelectedTab("step3")}
+                      color="primary"
+                    >
+                      Regresar
+                    </Button>
 
-
-   return (
-     <>
-       <div className="absolute w-full h-full">
-         <img
-           className="w-full h-full object-cover"
-           src={imagenBarberia}
-           alt=""
-         />
-       </div>
-       <div className="flex w-full py-36">
-         <ToastContainer />
-         <Card className=" mx-auto p-10 lg:w-[700px] md:w-[700px] ">
-           <CardBody className="">
-             <form onSubmit={submitDatosCita}>
-               <Tabs
-                 fullWidth
-                 size="md"
-                 aria-label="Tabs form"
-                 selectedKey={selectedTab}
-                 onSelectionChange={setSelectedTab}
-               >
-                 <Tab key="step1" title="Paso uno">
-                   <div className="flex flex-col gap-4">
-                     <h4
-                       style={{ padding: "20px 0 0 0" }}
-                       className="font-bold text-large text-center"
-                     >
-                       Seleccione servicio y proveedor
-                     </h4>
-                     <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
-                       {isLoadingServicios ? (
-                         <div
-                           color="primary"
-                           className="text-center w-[260px] px-1 py-2"
-                         >
-                           <Spinner
-                             label="Cargando..."
-                             color="primary"
-                             labelColor="primary"
-                           />
-                         </div>
-                       ) : (
-                         <Select
-                           onChange={onChangeServicio}
-                           labelPlacement={"inside"}
-                           label="servicio"
-                           className="max-w-xs"
-                           isRequired
-                           disallowEmptySelection
-                           defaultSelectedKeys={SelectedIdServicio}
-                         >
-                           {servicios.map((servicio) => (
-                             <SelectItem
-                               key={servicio.id}
-                               description={
-                                 servicio.id != 0 &&
-                                 `Precio Q ${servicio.precio} - Duración aprox. ${servicio.duracion} min.`
-                               }
-                             >
-                               {servicio.nombre}
-                             </SelectItem>
-                           ))}
-                         </Select>
-                       )}
-                       {isLoadingProveedores ? (
-                         <div
-                           color="primary"
-                           className="text-center w-[260px] px-1 py-2"
-                         >
-                           <Spinner
-                             label="Cargando..."
-                             color="primary"
-                             labelColor="primary"
-                           />
-                         </div>
-                       ) : (
-                         <Select
-                           labelPlacement={"inside"}
-                           label="proveedor"
-                           className="max-w-xs"
-                           isDisabled={isDisabledSelectProveedores}
-                           isRequired
-                           disallowEmptySelection
-                           onChange={onChangeProveedores}
-                           defaultSelectedKeys={SelectedIdProveedor}
-                         >
-                           {proveedores.map((proveedor) => (
-                             <SelectItem
-                               key={proveedor.id}
-                               description={
-                                 proveedor.id != 0 && `${proveedor.apellido}`
-                               }
-                             >
-                               {`${proveedor.nombre}`}
-                             </SelectItem>
-                           ))}
-                         </Select>
-                       )}
-                     </div>
-                     <div className="flex gap-2 justify-end">
-                       <Button
-                         isDisabled={isDisabledStep2}
-                         color="primary"
-                         onClick={() => setSelectedTab("step2")}
-                       >
-                         {isLoadingButton ? "Cargando datos..." : "Continuar"}
-                       </Button>
-                     </div>
-                   </div>
-                 </Tab>
-                 <Tab key="step2" title="Paso dos" isDisabled={isDisabledStep2}>
-                   <div className="flex flex-col gap-4">
-                     <h4
-                       style={{ padding: "20px 0 0 0" }}
-                       className="font-bold text-large text-center"
-                     >
-                       Seleccione fecha y hora de cita
-                     </h4>
-                     <div className="flex gap-10 py-3 justify-between items-center flex-col md:flex-row md:items-start lg:flex-row lg:items-start">
-                       {isLoadingFechas ? (
-                         <div
-                           color="primary"
-                           className="text-center w-[260px] px-1 py-2"
-                         >
-                           <Spinner
-                             label="Cargando..."
-                             color="primary"
-                             labelColor="primary"
-                           />
-                         </div>
-                       ) : (
-                         <I18nProvider locale="es-ES">
-                           <Calendar
-                             className="min-w-max"
-                             aria-label="Date (Max Date Value)"
-                             isDateUnavailable={fechasReservadas}
-                             errorMessage={
-                               esDiaInvalido
-                                 ? `El dia ${
-                                     diasDeLaSemana[
-                                       new Date(fechaSeleccionada).getUTCDay()
-                                     ]
-                                   } no es dia laboral, porfavor seleccione otro dia`
-                                 : undefined
-                             }
-                             isInvalid={esDiaInvalido}
-                             value={fechaSeleccionadaValida}
-                             onChange={changeFecha}
-                             minValue={today(getLocalTimeZone())}
-                           />
-                         </I18nProvider>
-                       )}
-                       {isLoadingHorarioDIsponible ? (
-                         <div
-                           color="primary"
-                           className="text-center w-[260px] px-1 py-2"
-                         >
-                           <Spinner
-                             label="Cargando..."
-                             color="primary"
-                             labelColor="primary"
-                           />
-                         </div>
-                       ) : horarioDisponible.length > 0 ? (
-                         <Select
-                           labelPlacement={"inside"}
-                           label="Horario"
-                           className="max-w-xs"
-                           isRequired
-                           onChange={changeHorarioSeleccionado}
-                           defaultSelectedKeys={horarioSeleccionado}
-                         >
-                           {horarioDisponible.map((horario, i) => (
-                             <SelectItem key={i}>{horario}</SelectItem>
-                           ))}
-                         </Select>
-                       ) : (
-                         <div
-                           color="primary"
-                           className="text-center w-[260px] border-small px-1 py-2 rounded-small border-default-200 dark:border-default-100"
-                         >
-                           <span className=" text-red-400">
-                             Horario no disponible
-                           </span>
-                         </div>
-                       )}
-                     </div>
-                     <div className="flex gap-2 justify-between">
-                       <Button
-                         onClick={() => setSelectedTab("step1")}
-                         color="primary"
-                       >
-                         Regresar
-                       </Button>
-                       <Button
-                         isDisabled={isDisabledStep3}
-                         onClick={() => setSelectedTab("step3")}
-                         color="primary"
-                       >
-                         Continuar
-                       </Button>
-                     </div>
-                   </div>
-                 </Tab>
-                 <Tab
-                   key="step3"
-                   title="Paso tres"
-                   isDisabled={isDisabledStep3}
-                 >
-                   <form className="flex flex-col gap-4">
-                     <h4
-                       style={{ padding: "20px 0 0 0" }}
-                       className="font-bold text-large text-center"
-                     >
-                       Ingrese su información
-                     </h4>
-                     <div
-                       style={{ padding: "0.75rem 0 0 0" }}
-                       className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row"
-                     >
-                       <Input
-                         isRequired
-                         label="Nombre"
-                         placeholder="Ingresa tu nombre"
-                         type="text"
-                         className="min-w-60"
-                         value={nombre}
-                         errorMessage={nombreMensajeError}
-                         isInvalid={esNombreInvalido}
-                         onValueChange={changeNombre}
-                       />
-                       <Input
-                         isRequired
-                         label="Apellido"
-                         placeholder="Ingresa tu apellido"
-                         type="text"
-                         className="min-w-60"
-                         value={apellido}
-                         errorMessage={apellidoMensajeError}
-                         isInvalid={esApellidoInvalido}
-                         onValueChange={changeApellido}
-                       />
-                     </div>
-                     <div className="flex gap-5 justify-between flex-col md:flex-row lg:flex-row">
-                       <Input
-                         isRequired
-                         label="Correo"
-                         placeholder="Ingresa tu correo electronico"
-                         type="email"
-                         className="min-w-60"
-                         value={correo}
-                         errorMessage={correoMensajeError}
-                         isInvalid={esCorreoinvalido}
-                         onValueChange={changeCorreo}
-                         SelectedIdServicio
-                       />
-                       <Input
-                         isRequired
-                         label="Telefono"
-                         placeholder="Ingresa tu telefono"
-                         type="text"
-                         className="min-w-60"
-                         value={telefono}
-                         errorMessage={telefonoMensajeError}
-                         isInvalid={esTelefonoInvalido}
-                         onValueChange={changeTelefono}
-                       />
-                     </div>
-                     <Textarea
-                       label="Notas"
-                       placeholder="Ingresa una nota"
-                       value={notas}
-                       errorMessage={notasMensajeError}
-                       isInvalid={esNotasInvalido}
-                       onValueChange={changeNotas}
-                     />
-
-                     <div className="flex gap-2 justify-between">
-                       <Button
-                         onClick={() => setSelectedTab("step2")}
-                         color="primary"
-                       >
-                         Regresar
-                       </Button>
-
-                       <Button
-                         isDisabled={
-                           esNombreInvalido ||
-                           !nombre ||
-                           esApellidoInvalido ||
-                           !apellido ||
-                           esCorreoinvalido ||
-                           !correo ||
-                           esTelefonoInvalido ||
-                           !telefono
-                         }
-                         onClick={() => {
-                           setSelectedTab("step4");
-                         }}
-                         color="primary"
-                       >
-                         Continuar
-                       </Button>
-                     </div>
-                   </form>
-                 </Tab>
-               </Tabs>
-             </form>
-           </CardBody>
-         </Card>
-       </div>
-     </>
-   );
+                    <Button
+                      isDisabled={isLoadingButton}
+                      color="primary"
+                      type="submit"
+                    >
+                      {isLoadingButton ? "Cargando..." : "Confirmar cita"}
+                    </Button>
+                  </div>
+                </Tab>
+              </Tabs>
+            </form>
+          </CardBody>
+        </Card>
+        <Modal
+          backdrop="blur"
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+          isDismissable={false}
+          isKeyboardDismissDisabled
+          hideCloseButton
+          motionProps={{
+            variants: {
+              enter: {
+                y: 0,
+                opacity: 1,
+                transition: {
+                  duration: 0.3,
+                  ease: "easeOut",
+                },
+              },
+              exit: {
+                y: -20,
+                opacity: 0,
+                transition: {
+                  duration: 0.2,
+                  ease: "easeIn",
+                },
+              },
+            },
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Informacion de la solicitud
+                </ModalHeader>
+                <ModalBody>
+                  <p>{mensajeModal}</p>
+                  <Button
+                    as={Link}
+                    className="py-5"
+                    color="primary"
+                    to={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Cita+agendada+en+${nombreEmpresa}&dates=${formatFechaInicioToGoogleCalendar()}%2F${formatFechaFinToGoogleCalendar()}&location=${nombreEmpresa}&details=${notas}`}
+                    target="_blank"
+                  >
+                    Guardar el recordatorio en tu calendario de google
+                  </Button>
+                  <Button
+                    onPress={onClose}
+                    className="py-5"
+                    color="secondary"
+                    onClick={async () => await getServicios()}
+                  >
+                    Realizar una nueva cita
+                  </Button>
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </div>
+    </>
+  );
 }
 
 export default HomePage;
