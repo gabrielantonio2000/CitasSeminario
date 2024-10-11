@@ -20,13 +20,14 @@ import {
 import { useState, useEffect } from "react";
 import { I18nProvider } from "@react-aria/i18n";
 
-import { obtenerServicios } from "../services/servicios";
+import { obtenerServiciosCliente } from "../services/servicios";
 import { obtenerProveedoresPorServicio } from "../services/usuarios";
 import {
-  guardarCita,
+  guardarCitaCliente,
   obtenerCitasPorProveedor,
   obtenerDiasNoLaborales,
   obtenerHorariosDisponiblesPorFecha,
+  preGuardarCitaCliente,
 } from "../services/citas";
 
 import { format } from "@formkit/tempo";
@@ -40,17 +41,10 @@ import imagenBarberia from "../assets/barberia.jpg";
 
 import { today, getLocalTimeZone } from "@internationalized/date";
 
-const diasDeLaSemana = {
-  0: "domingo",
-  1: "lunes",
-  2: "martes",
-  3: "miercoles",
-  4: "jueves",
-  5: "viernes",
-  6: "sabado",
-};
+import { diasDeLaSemana } from "../utils/diasDeLaSemana";
+import PinField from "react-pin-field";
 
-const nombreEmpresa = "PRUEBA S.A.";
+const nombreEmpresa = "THE KING BARBER";
 function HomePage() {
   const [selectedTab, setSelectedTab] = useState("step1");
 
@@ -115,6 +109,12 @@ function HomePage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [mensajeModal, setMensajeModal] = useState(null);
 
+  const [token, setToken] = useState("");
+  const [isValidToken, setIsValidToken] = useState(false);
+
+  // para mostrar modal
+  const [isOpenConfirmacion, setIsOpenConfirmacion] = useState(false);
+
   async function getServicios() {
     // reinicar todo los campos por defecto
     setIsDisabledSelectProveedores(true);
@@ -137,7 +137,7 @@ function HomePage() {
     setIsDisabledStep3(true);
 
     setIsLoadingServicios(true);
-    const data = await obtenerServicios();
+    const data = await obtenerServiciosCliente();
 
     if (!data.ocurrioError) {
       if (data.resultado.length > 0) {
@@ -165,15 +165,15 @@ function HomePage() {
   const onChangeServicio = async (e) => {
     setIsDisabledSelectProveedores(true);
     setIsDisabledStep2(true);
-    console.log("servicios");
 
     setServicios(servicios.filter((servicio) => servicio.id != 0));
 
     setIsLoadingProveedores(true);
     const data = await obtenerProveedoresPorServicio(e.target.value);
 
+    setDefaultSelectedIdProveedor(["0"]);
+
     if (!data.ocurrioError) {
-      console.log(proveedores);
       if (data.resultado.length > 0) {
         setProveedores([
           { id: 0, nombre: "-- Seleccionar --" },
@@ -253,12 +253,10 @@ function HomePage() {
     setFechaSeleccionadaValida(null);
     setIsDisabledStep3(true);
 
-    console.log(fecha);
     if (!esInvalido) {
       setIsLoadingHorarioDIsponible(true);
 
       setFechaSeleccionadaValida(fecha);
-      console.log(SelectedIdProveedor);
       const data = await obtenerHorariosDisponiblesPorFecha(
         fecha.toString(),
         SelectedIdProveedor[0],
@@ -267,7 +265,7 @@ function HomePage() {
       );
 
       if (!data.ocurrioError) {
-        if (data.resultado.length > 0)
+        if (data?.resultado?.length > 0)
           setHorarioDisponible(["-- Seleccionar --", ...data.resultado]);
 
         setHorarioSeleccionado(["0"]);
@@ -282,7 +280,6 @@ function HomePage() {
   const changeHorarioSeleccionado = (e) => {
     const horario = e.target.value;
     setIsDisabledStep3(true);
-    console.log(horario);
     setHorarioSeleccionado([horario]);
 
     if (horario != 0) setIsDisabledStep3(horario ? false : true);
@@ -348,8 +345,25 @@ function HomePage() {
   };
 
   const changeNotas = (valor) => {
-    console.log(valor.trim());
     if (valor.length < 120) setNotas(valor);
+  };
+
+  const presubmitDatosCita = async (e) => {
+    setIsLoadingButton(true);
+    e.preventDefault();
+
+    const correoCliente = correo;
+
+    const data = await preGuardarCitaCliente(correoCliente, nombre);
+
+    if (!data.ocurrioError) {
+      setIsOpenConfirmacion(true);
+      toast.success(data.mensaje);
+    } else {
+      toast.error(data.mensaje);
+    }
+
+    setIsLoadingButton(false);
   };
 
   const submitDatosCita = async (e) => {
@@ -370,7 +384,7 @@ function HomePage() {
     const telefonoCliente = telefono;
     const notasCLiente = notas;
 
-    const data = await guardarCita(
+    const data = await guardarCitaCliente(
       idServicio,
       duracionServicio,
       idProveedor,
@@ -380,11 +394,13 @@ function HomePage() {
       apellidoCliente,
       correoCliente,
       telefonoCliente,
-      notasCLiente
+      notasCLiente,
+      token
     );
 
     if (!data.ocurrioError) {
       onOpen(true);
+      setIsOpenConfirmacion(false);
 
       toast.success(
         `${data.mensaje} para el dia ${format(
@@ -409,15 +425,15 @@ function HomePage() {
     const fechaInicio = new Date(
       `${fechaSeleccionadaValida.toString()}T${
         horarioDisponible[horarioSeleccionado[0]]
-      }Z`
+      }`
     );
 
-    const year = fechaInicio.getUTCFullYear();
-    const month = String(fechaInicio.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(fechaInicio.getUTCDate()).padStart(2, "0");
-    const hours = String(fechaInicio.getUTCHours()).padStart(2, "0");
-    const minutes = String(fechaInicio.getUTCMinutes()).padStart(2, "0");
-    const seconds = String(fechaInicio.getUTCSeconds()).padStart(2, "0");
+    const year = fechaInicio.getFullYear();
+    const month = String(fechaInicio.getMonth() + 1).padStart(2, "0");
+    const day = String(fechaInicio.getDate()).padStart(2, "0");
+    const hours = String(fechaInicio.getHours()).padStart(2, "0");
+    const minutes = String(fechaInicio.getMinutes()).padStart(2, "0");
+    const seconds = String(fechaInicio.getSeconds()).padStart(2, "0");
 
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   }
@@ -426,7 +442,7 @@ function HomePage() {
     const fechaInicio = new Date(
       `${fechaSeleccionadaValida.toString()}T${
         horarioDisponible[horarioSeleccionado[0]]
-      }Z`
+      }`
     );
 
     const duracion = servicios.find(
@@ -436,12 +452,12 @@ function HomePage() {
     const fechaFinal = new Date(fechaInicio);
     fechaFinal.setMinutes(fechaFinal.getMinutes() + duracion);
 
-    const year = fechaFinal.getUTCFullYear();
-    const month = String(fechaFinal.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(fechaFinal.getUTCDate()).padStart(2, "0");
-    const hours = String(fechaFinal.getUTCHours()).padStart(2, "0");
-    const minutes = String(fechaFinal.getUTCMinutes()).padStart(2, "0");
-    const seconds = String(fechaFinal.getUTCSeconds()).padStart(2, "0");
+    const year = fechaFinal.getFullYear();
+    const month = String(fechaFinal.getMonth() + 1).padStart(2, "0");
+    const day = String(fechaFinal.getDate()).padStart(2, "0");
+    const hours = String(fechaFinal.getHours()).padStart(2, "0");
+    const minutes = String(fechaFinal.getMinutes()).padStart(2, "0");
+    const seconds = String(fechaFinal.getSeconds()).padStart(2, "0");
 
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   }
@@ -455,11 +471,12 @@ function HomePage() {
           alt=""
         />
       </div>
-      <div className="flex w-full py-36">
+      <div className="flex w-full py-36 flex-col">
         <ToastContainer />
+
         <Card className=" mx-auto p-10 lg:w-[700px] md:w-[700px] ">
           <CardBody className="">
-            <form onSubmit={submitDatosCita}>
+            <form onSubmit={presubmitDatosCita}>
               <Tabs
                 fullWidth
                 size="md"
@@ -650,7 +667,6 @@ function HomePage() {
                     </div>
                   </div>
                 </Tab>
-
                 <Tab key="step3" title="Paso tres" isDisabled={isDisabledStep3}>
                   <form className="flex flex-col gap-4">
                     <h4
@@ -848,6 +864,26 @@ function HomePage() {
             </form>
           </CardBody>
         </Card>
+
+        <Card className="absolute bottom-0 left-0 right-0 rounded-none">
+          <section className="py-5 bg-gray-800 text-white">
+            <div className="container mx-auto text-center">
+              <p>La mejor barbería de Chiquimulilla.</p>
+              <Link
+                to="/"
+                className="bg-yellow-500 text-black px-6 py-3 rounded mt-4 inline-block"
+              >
+                Regresar a la pagina de inicio
+              </Link>
+            </div>
+            <div className="container mx-auto text-center my-2">
+              <p>
+                &copy; 2024 The King Barber Life. Todos los derechos reservados.
+              </p>
+            </div>
+          </section>
+        </Card>
+
         <Modal
           backdrop="blur"
           isOpen={isOpen}
@@ -901,6 +937,77 @@ function HomePage() {
                   >
                     Realizar una nueva cita
                   </Button>
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+        <Modal
+          backdrop="blur"
+          size="xl"
+          isOpen={isOpenConfirmacion}
+          onOpenChange={setIsOpenConfirmacion}
+          isDismissable={false}
+          isKeyboardDismissDisabled
+          hideCloseButton
+          motionProps={{
+            variants: {
+              enter: {
+                y: 0,
+                opacity: 1,
+                transition: {
+                  duration: 0.3,
+                  ease: "easeOut",
+                },
+              },
+              exit: {
+                y: -20,
+                opacity: 0,
+                transition: {
+                  duration: 0.2,
+                  ease: "easeIn",
+                },
+              },
+            },
+          }}
+        >
+          <ModalContent>
+            {() => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Confirmar Cita
+                </ModalHeader>
+                <ModalBody>
+                  <form onSubmit={submitDatosCita}>
+                    <div className="text-center my-10">
+                      <div className="flex flex-col items-center justify-center">
+                        <h2 className="text-2xl font-bold mb-4">
+                          Introduce tu código de verificación
+                        </h2>
+                        <div className="flex  items-center justify-center">
+                          <PinField
+                            autoFocus
+                            length={6}
+                            className=" w-12 h-12 text-2xl border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-500 text-center mx-1"
+                            onChange={(value) => {
+                              setIsValidToken(value.length === 6);
+                              setToken(value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end py-5">
+                      <Button
+                        type="submit"
+                        fullWidth
+                        color="primary"
+                        isDisabled={!isValidToken || isLoadingButton}
+                      >
+                        Continuar
+                      </Button>
+                    </div>
+                  </form>
                 </ModalBody>
               </>
             )}
